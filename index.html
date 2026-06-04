@@ -422,6 +422,151 @@
       background: #fff7ed;
     }
 
+
+    .plan.featured {
+      border: 3px solid #ffb084;
+      background: linear-gradient(135deg, #fffaf6, #fff0e4);
+      transform: translateY(-2px);
+    }
+
+    .plan.rich {
+      border: 3px solid #bfe9d7;
+      background: linear-gradient(135deg, #ffffff, #eefaf4);
+    }
+
+    .plan.bento {
+      border: 3px solid #ffd7a8;
+      background: linear-gradient(135deg, #ffffff, #fff7e8);
+    }
+
+    .plan-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 15px;
+      font-weight: 1000;
+      margin-bottom: 10px;
+      background: #fff1e7;
+      color: #d9623c;
+    }
+
+    .plan.rich .plan-ribbon {
+      background: #edf8f2;
+      color: #398368;
+    }
+
+    .plan.bento .plan-ribbon {
+      background: #fff7df;
+      color: #b7791f;
+    }
+
+    .plan-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .plan-content-box {
+      margin: 12px 0;
+      padding: 12px;
+      border-radius: 18px;
+      background: #ffffff;
+      border: 1px solid #f2e2d7;
+    }
+
+    .plan-content-title {
+      color: #8a817c;
+      font-size: 13px;
+      font-weight: 1000;
+      margin-bottom: 6px;
+    }
+
+    .plan-content-text {
+      color: #4f453f;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.6;
+    }
+
+    .nutrition-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .nutrition-chip {
+      border-radius: 18px;
+      padding: 12px 10px;
+      background: #fffaf6;
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .nutrition-chip.protein {
+      background: #fff3ef;
+      border-color: #ffd7c8;
+    }
+
+    .nutrition-chip.veggie {
+      background: #edf8f2;
+      border-color: #d7efe4;
+    }
+
+    .nutrition-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .nutrition-value {
+      color: #3f3a36;
+      font-size: 24px;
+      font-weight: 1000;
+      letter-spacing: -0.5px;
+    }
+
+    .gap-box {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .gap-line {
+      padding: 10px 12px;
+      border-radius: 15px;
+      background: #ffffff;
+      border: 1px solid #f2e2d7;
+      color: #4f453f;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.6;
+    }
+
+    .fit-message {
+      padding: 12px;
+      border-radius: 16px;
+      background: #fff1e7;
+      border: 1px solid #f6d8c5;
+      color: #d9623c;
+      font-size: 15px;
+      font-weight: 1000;
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+
+    .apply-btn {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #3f3a36, #6b5b51);
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(63, 58, 54, 0.18);
+    }
+
     .rice-card {
       background: linear-gradient(135deg, #ffffff, #edf8f2);
       border: 1px solid #d7efe4;
@@ -639,6 +784,8 @@
   </main>
 
   <script>
+    const ORDER_SYSTEM_URL = "https://back324941.github.io/-Hearthtable/";
+
     const nutritionBase = {
       child: { label: "兒童", protein: 75, veggie: 60, emoji: "🧒" },
       female: { label: "女性", protein: 105, veggie: 120, emoji: "👩" },
@@ -1089,29 +1236,238 @@ if (
         return a.protein - b.protein;
       });
 
-      let selected = sortedPlans.slice(0, 3);
-
-      if (shouldIncludeDoublePlan(needs, sortedPlans)) {
-        const bestDoublePlan = sortedPlans.find(plan => plan.mealKey === "double");
-        const hasDoublePlan = selected.some(plan => plan.mealKey === "double");
-
-        if (bestDoublePlan && !hasDoublePlan) {
-          selected = selected.slice(0, 2);
-          selected.push(bestDoublePlan);
-          selected.sort((a, b) => {
-            if (a.overScore !== b.overScore) return a.overScore - b.overScore;
-            if (a.totalAddonCount !== b.totalAddonCount) return a.totalAddonCount - b.totalAddonCount;
-            if (a.price !== b.price) return a.price - b.price;
-            if (a.proteinAddonCount !== b.proteinAddonCount) return a.proteinAddonCount - b.proteinAddonCount;
-            return a.protein - b.protein;
-          });
-        }
-      }
-
-      assignReasons(selected);
+      const selected = selectThreeCustomerPlans(sortedPlans, needs);
 
       return selected;
     }
+
+
+    function planDistance(plan, targetProteinOver, targetVeggieOver) {
+      return Math.abs(plan.proteinOver - targetProteinOver)
+        + Math.abs(plan.veggieOver - targetVeggieOver)
+        + plan.totalAddonCount * 18
+        + Math.max(0, plan.price / 100);
+    }
+
+    function clonePlanWithRole(plan, role) {
+      return Object.assign({}, plan, {
+        displayRole: role.key,
+        displayBadge: role.badge,
+        displayClass: role.className,
+        displayTitle: role.title,
+        displaySubtitle: role.subtitle
+      });
+    }
+
+    function selectThreeCustomerPlans(sortedPlans, needs) {
+      if (sortedPlans.length === 0) return [];
+
+      const roles = {
+        best: {
+          key: "best",
+          badge: "⭐ 最推薦",
+          className: "featured",
+          title: "最接近您家今天的需求",
+          subtitle: "份量最貼近，不容易吃不夠，也比較不會剩太多。"
+        },
+        rich: {
+          key: "rich",
+          badge: "👍 吃得更豐盛",
+          className: "rich",
+          title: "怕不夠吃可以選這組",
+          subtitle: "份量更有餘裕，適合家人食量較大或今天想吃飽一點。"
+        },
+        bento: {
+          key: "bento",
+          badge: "🍱 留便當首選",
+          className: "bento",
+          title: "份量最充足，可能可留隔餐",
+          subtitle: "蛋白質與蔬菜都有較明顯餘裕，適合想順便準備隔天便當。"
+        }
+      };
+
+      const used = new Set();
+      const selected = [];
+
+      const best = sortedPlans[0];
+      selected.push(clonePlanWithRole(best, roles.best));
+      used.add(best.key);
+
+      let richCandidates = sortedPlans.filter(plan =>
+        !used.has(plan.key) &&
+        (
+          plan.proteinOver >= 80 ||
+          plan.veggieOver >= 60 ||
+          plan.price > best.price
+        )
+      );
+
+      if (richCandidates.length === 0) {
+        richCandidates = sortedPlans.filter(plan => !used.has(plan.key));
+      }
+
+      richCandidates.sort((a, b) => {
+        const aScore = planDistance(a, 140, 80);
+        const bScore = planDistance(b, 140, 80);
+        if (aScore !== bScore) return aScore - bScore;
+        if (a.totalAddonCount !== b.totalAddonCount) return a.totalAddonCount - b.totalAddonCount;
+        return a.price - b.price;
+      });
+
+      const rich = richCandidates[0];
+      if (rich) {
+        selected.push(clonePlanWithRole(rich, roles.rich));
+        used.add(rich.key);
+      }
+
+      let bentoCandidates = sortedPlans.filter(plan =>
+        !used.has(plan.key) &&
+        plan.proteinOver >= 150 &&
+        plan.veggieOver >= 150
+      );
+
+      if (bentoCandidates.length === 0) {
+        bentoCandidates = sortedPlans.filter(plan =>
+          !used.has(plan.key) &&
+          (plan.proteinOver >= 150 || plan.veggieOver >= 150)
+        );
+      }
+
+      if (bentoCandidates.length === 0) {
+        bentoCandidates = sortedPlans.filter(plan => !used.has(plan.key));
+      }
+
+      bentoCandidates.sort((a, b) => {
+        const aScore = planDistance(a, 260, 180);
+        const bScore = planDistance(b, 260, 180);
+        if (aScore !== bScore) return aScore - bScore;
+        if (a.price !== b.price) return a.price - b.price;
+        return a.totalAddonCount - b.totalAddonCount;
+      });
+
+      const bento = bentoCandidates[0];
+      if (bento) {
+        selected.push(clonePlanWithRole(bento, roles.bento));
+        used.add(bento.key);
+      }
+
+      while (selected.length < 3) {
+        const next = sortedPlans.find(plan => !used.has(plan.key));
+        if (!next) break;
+        const role = selected.length === 1 ? roles.rich : roles.bento;
+        selected.push(clonePlanWithRole(next, role));
+        used.add(next.key);
+      }
+
+      return selected;
+    }
+
+    function getDifferenceText(kind, over) {
+      const icon = kind === "protein" ? "🥩 蛋白質" : "🥬 蔬菜";
+
+      if (over <= 30) {
+        return `${icon}：幾乎剛剛好`;
+      }
+
+      if (over <= 100) {
+        return `${icon}：多 ${over}g，份量稍微有餘裕`;
+      }
+
+      if (over <= 180) {
+        return `${icon}：多 ${over}g，吃起來會比較充足`;
+      }
+
+      return `${icon}：多 ${over}g，可能可留隔餐`;
+    }
+
+    function getCustomerFitMessage(plan) {
+      if (plan.displayRole === "best") {
+        return "這組最適合想「剛好吃飽、不想浪費」的家庭。";
+      }
+
+      if (plan.displayRole === "rich") {
+        return "這組適合家裡有人食量大、怕不夠吃，或今天菜色很受歡迎。";
+      }
+
+      return "這組適合想多準備一點，晚餐吃完後也有機會留下便當。";
+    }
+
+    function getPlanContentText(options) {
+      const main = options.main || "基本套餐";
+      const addons = options.addons || "無需額外加點";
+
+      if (addons === "無需額外加點") {
+        return main;
+      }
+
+      return `${main}｜加點：${addons}`;
+    }
+
+    function getOrderMealType(plan) {
+      if (plan.mealKey === "double") return "DOUBLE";
+      return "LIGHT";
+    }
+
+    function getOrderVegMode(plan) {
+      if (plan.vegMode === "large") return "TODAY_L";
+      if (plan.vegMode === "double") return "TWIN";
+      return "TODAY";
+    }
+
+    function getOrderUpgradeFlag(plan) {
+      return plan.mealKey === "light-upgrade" ? "1" : "0";
+    }
+
+    function applyPlan(planKey) {
+      const plan = window.latestRecommendationPlans
+        ? window.latestRecommendationPlans.find(item => item.key === planKey)
+        : null;
+
+      if (!plan) {
+        alert("找不到這個推薦方案，請重新整理後再試一次。");
+        return;
+      }
+
+      const payload = {
+        source: "hearth-table-calculator",
+        createdAt: new Date().toISOString(),
+        role: plan.displayRole,
+        title: plan.displayBadge,
+        mealKey: plan.mealKey,
+        name: plan.name,
+        orderOptions: plan.orderOptions,
+        protein: plan.protein,
+        veggie: plan.veggie,
+        proteinOver: plan.proteinOver,
+        veggieOver: plan.veggieOver,
+        largeAddonCount: plan.largeAddonCount,
+        smallAddonCount: plan.smallAddonCount,
+        vegMode: plan.vegMode,
+        vegSideCount: plan.vegSideCount,
+        price: Math.round(plan.price)
+      };
+
+      try {
+        localStorage.setItem("hearthTableRecommendedPlan", JSON.stringify(payload));
+      } catch (error) {
+        console.warn("無法寫入 localStorage", error);
+      }
+
+      const params = new URLSearchParams();
+      params.set("from", "recommendation");
+      params.set("meal", getOrderMealType(plan));
+      params.set("veg", getOrderVegMode(plan));
+      params.set("upgrade", getOrderUpgradeFlag(plan));
+      params.set("largeAddons", String(plan.largeAddonCount || 0));
+      params.set("smallAddons", String(plan.smallAddonCount || 0));
+      params.set("role", plan.displayRole || "");
+      params.set("title", plan.displayTitle || "");
+      params.set("protein", String(plan.protein || 0));
+      params.set("veggie", String(plan.veggie || 0));
+
+      window.location.href = ORDER_SYSTEM_URL + "?" + params.toString();
+    }
+
 
     function renderMembers() {
       els.memberCount.textContent = `${members.length} 位`;
@@ -1174,57 +1530,55 @@ if (
       }
 
       const plans = enumerateRecommendations(needs);
+      window.latestRecommendationPlans = plans;
 
       if (plans.length === 0) {
         els.recommendations.innerHTML = `<div class="empty">目前找不到符合需求的組合，請調整餐點資料或價格設定。</div>`;
         return;
       }
 
-      els.recommendations.innerHTML = plans.map((plan, index) => {
+      els.recommendations.innerHTML = plans.map((plan) => {
         const options = splitPlanOptions(plan);
+        const contentText = getPlanContentText(options);
+        const fitMessage = getCustomerFitMessage(plan);
 
         return `
-          <article class="plan">
+          <article class="plan ${plan.displayClass || ""}">
+            <div class="plan-ribbon">${plan.displayBadge}</div>
+
             <div class="plan-header">
-              <h3 class="plan-title">No.${index + 1} ${plan.name}</h3>
+              <div>
+                <h3 class="plan-title">${plan.displayTitle}</h3>
+                <p class="plan-subtitle">${plan.displaySubtitle}</p>
+              </div>
               <div class="plan-price">${formatMoney(plan.price)}</div>
             </div>
 
-            <p class="plan-main-line">- ${options.main}</p>
-            <p class="plan-addon-line">加點：${options.addons}</p>
-
-            <div class="reason-box">
-              <div class="reason-title">推薦理由：</div>
-              <div class="reason-text">${plan.reason}</div>
+            <div class="plan-content-box">
+              <div class="plan-content-title">建議點餐方式</div>
+              <div class="plan-content-text">${plan.name}：${contentText}</div>
             </div>
 
-            <div class="simple-stats">
-              <div class="simple-stat-line">
-                肉／蛋豆含 ${plan.protein} 公克；蔬菜含 ${plan.veggie} 公克
+            <div class="nutrition-pair">
+              <div class="nutrition-chip protein">
+                <div class="nutrition-label">蛋白質總量</div>
+                <div class="nutrition-value">${plan.protein}g</div>
               </div>
-              <div class="coverage-box">
 
-  <div class="coverage-item protein">
-    <div class="coverage-label">
-      🥩 肉／蛋豆
-    </div>
+              <div class="nutrition-chip veggie">
+                <div class="nutrition-label">蔬菜總量</div>
+                <div class="nutrition-value">${plan.veggie}g</div>
+              </div>
+            </div>
 
-    <div class="coverage-value">
-      +${plan.proteinOver}g
-    </div>
-  </div>
+            <div class="gap-box">
+              <div class="gap-line">${getDifferenceText("protein", plan.proteinOver)}</div>
+              <div class="gap-line">${getDifferenceText("veggie", plan.veggieOver)}</div>
+            </div>
 
-  <div class="coverage-item veggie">
-    <div class="coverage-label">
-      🥦 蔬菜
-    </div>
+            <div class="fit-message">${fitMessage}</div>
 
-    <div class="coverage-value">
-      +${plan.veggieOver}g
-    </div>
-  </div>
-
-</div>
+            <button class="btn apply-btn" onclick="applyPlan('${plan.key}')">套用這個方案</button>
           </article>
         `;
       }).join("");
