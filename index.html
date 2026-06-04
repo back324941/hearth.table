@@ -567,6 +567,44 @@
       box-shadow: 0 10px 20px rgba(63, 58, 54, 0.18);
     }
 
+    .apply-day-box {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid #f2e2d7;
+    }
+
+    .apply-day-title {
+      font-size: 14px;
+      font-weight: 1000;
+      color: #5f554f;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .apply-day-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .apply-day-btn {
+      border: 0;
+      border-radius: 15px;
+      padding: 11px 8px;
+      font-size: 15px;
+      font-weight: 1000;
+      cursor: pointer;
+      background: linear-gradient(135deg, #3f3a36, #6b5b51);
+      color: #ffffff;
+      box-shadow: 0 8px 16px rgba(63, 58, 54, 0.14);
+    }
+
+    .apply-day-btn:active {
+      transform: scale(0.98);
+    }
+
     .rice-card {
       background: linear-gradient(135deg, #ffffff, #edf8f2);
       border: 1px solid #d7efe4;
@@ -1418,7 +1456,7 @@ if (
       return plan.mealKey === "light-upgrade" ? "1" : "0";
     }
 
-    function applyPlan(planKey) {
+    function applyPlan(planKey, targetDay) {
       const plan = window.latestRecommendationPlans
         ? window.latestRecommendationPlans.find(item => item.key === planKey)
         : null;
@@ -1444,7 +1482,8 @@ if (
         smallAddonCount: plan.smallAddonCount,
         vegMode: plan.vegMode,
         vegSideCount: plan.vegSideCount,
-        price: Math.round(plan.price)
+        price: Math.round(plan.price),
+        targetDay: targetDay
       };
 
       try {
@@ -1455,6 +1494,7 @@ if (
 
       const params = new URLSearchParams();
       params.set("from", "recommendation");
+      params.set("day", targetDay || "Tue");
       params.set("meal", getOrderMealType(plan));
       params.set("veg", getOrderVegMode(plan));
       params.set("upgrade", getOrderUpgradeFlag(plan));
@@ -1578,7 +1618,15 @@ if (
 
             <div class="fit-message">${fitMessage}</div>
 
-            <button class="btn apply-btn" onclick="applyPlan('${plan.key}')">套用這個方案</button>
+            <div class="apply-day-box">
+              <div class="apply-day-title">套用這個方案至：</div>
+              <div class="apply-day-grid">
+                <button class="apply-day-btn" onclick="applyPlan('${plan.key}', 'Tue')">📅 週二</button>
+                <button class="apply-day-btn" onclick="applyPlan('${plan.key}', 'Wed')">📅 週三</button>
+                <button class="apply-day-btn" onclick="applyPlan('${plan.key}', 'Thu')">📅 週四</button>
+                <button class="apply-day-btn" onclick="applyPlan('${plan.key}', 'Fri')">📅 週五</button>
+              </div>
+            </div>
           </article>
         `;
       }).join("");
