@@ -1,351 +1,1306 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>搭伙晚餐 | Hearth Table</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { 
-            background-color: #1a1410; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            overflow-x: hidden; -webkit-tap-highlight-color: transparent; 
-            font-size: 20px; user-select: none;
-        }
-        .gold-gradient { background: linear-gradient(135deg, #d4a574 0%, #a67c52 100%); }
-        .day-tab.active { border-color: #a67c52; background-color: rgba(166, 124, 82, 0.2); color: #a67c52; }
-        .clickable:active { transform: scale(0.96); opacity: 0.8; }
-        .item-selected { border-color: #a67c52 !important; background-color: #fff9f3 !important; color: #a67c52 !important; }
-        
-        .v-qty-container { 
-            display: flex; flex-direction: column; align-items: center; 
-            background: #fff; border: 4px solid #e5e7eb; border-radius: 1.5rem; 
-            overflow: hidden; width: 85px; 
-        }
-        .v-qty-btn { 
-            width: 100%; height: 55px; display: flex; align-items: center; justify-content: center; 
-            font-size: 32px; font-weight: 900; cursor: pointer;
-        }
-        .btn-plus { background-color: #a67c52; color: white; }
-        .btn-minus { background-color: #f3f4f6; color: #9ca3af; }
-        
-        #cart-drawer { transition: transform 0.3s ease; transform: translateX(100%); }
-        #cart-drawer.open { transform: translateX(0); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>搭伙份量達人</title>
+  <style>
+    :root {
+      --bg: #fff8f0;
+      --card: #ffffff;
+      --primary: #ff8a65;
+      --primary-dark: #e76f51;
+      --secondary: #7fc8a9;
+      --text: #3f3a36;
+      --muted: #8a817c;
+      --line: #f1dfd2;
+      --soft: #fff1e7;
+      --green-soft: #edf8f2;
+      --danger: #ff6b6b;
+      --shadow: 0 10px 26px rgba(120, 72, 40, 0.12);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background:
+        radial-gradient(circle at top left, #ffe7d4 0, transparent 34%),
+        radial-gradient(circle at top right, #e3f6ed 0, transparent 30%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 36px;
+    }
+
+    .hero {
+      padding: 22px 18px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #fff, #fff3e9);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "🍱";
+      position: absolute;
+      right: 18px;
+      top: 14px;
+      font-size: 58px;
+      opacity: 0.22;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 680px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(241, 223, 210, 0.9);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-title h2 {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--soft);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .member-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #5b5049;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      border: 2px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 13px 12px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus,
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(255, 138, 101, 0.14);
+    }
+
+    .check-row {
+      display: grid;
+      gap: 10px;
+    }
+
+    .check-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #fffaf6;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-card input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .check-card span {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: -4px;
+    }
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s;
+      min-height: 50px;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #ffb084);
+      color: white;
+      box-shadow: 0 10px 20px rgba(255, 138, 101, 0.24);
+    }
+
+    .btn-danger {
+      background: #fff0f0;
+      color: #d94a4a;
+      border: 1px solid #ffd0d0;
+      min-height: 42px;
+      padding: 10px 12px;
+      font-size: 15px;
+    }
+
+    .members {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .member-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #fffaf6;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+    }
+
+    .member-main {
+      min-width: 0;
+    }
+
+    .member-name {
+      font-size: 17px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .member-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .empty {
+      padding: 18px;
+      border-radius: 18px;
+      background: #fffaf6;
+      border: 1px dashed #e7cbb8;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric {
+      background: var(--green-soft);
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid #d7efe4;
+    }
+
+    .metric:nth-child(2) {
+      background: var(--soft);
+      border-color: #f6d8c5;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 1000;
+      letter-spacing: -0.5px;
+    }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .price-field {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      align-items: center;
+      gap: 10px;
+      background: #fffaf6;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px;
+    }
+
+    .price-field input {
+      text-align: right;
+      font-weight: 900;
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .fixed-price-note {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #edf8f2;
+      border: 1px solid #d7efe4;
+      color: #398368;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .recommendations {
+      display: grid;
+      gap: 12px;
+    }
+
+    .plan {
+      border-radius: 22px;
+      padding: 16px;
+      background: linear-gradient(135deg, #ffffff, #fff8f2);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 18px rgba(120, 72, 40, 0.08);
+    }
+
+    .plan-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .plan-title {
+      font-size: 25px;
+      font-weight: 1000;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .plan-price {
+      font-size: 20px;
+      font-weight: 1000;
+      color: var(--primary-dark);
+      white-space: nowrap;
+    }
+
+    .plan-main-line {
+      color: #5f554f;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.6;
+      margin: 0 0 8px;
+    }
+
+    .plan-addon-line {
+      color: #5f554f;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.6;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: #fffaf6;
+      border: 1px solid var(--line);
+    }
+
+    .reason-box {
+      margin: 10px 0 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #fff1e7;
+      border: 1px solid #f6d8c5;
+    }
+
+    .reason-title {
+      color: #9b6a52;
+      font-size: 13px;
+      font-weight: 1000;
+      margin-bottom: 6px;
+    }
+
+    .reason-text {
+      color: #d9623c;
+      font-size: 15px;
+      font-weight: 1000;
+      line-height: 1.5;
+    }
+
+    .simple-stats {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .simple-stat-line {
+      padding: 10px 12px;
+      border-radius: 15px;
+      background: #ffffff;
+      border: 1px solid #f2e2d7;
+      color: #4f453f;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.6;
+    }
+
+    .simple-stat-line.over {
+      background: #fff7ed;
+    }
+
+    .rice-card {
+      background: linear-gradient(135deg, #ffffff, #edf8f2);
+      border: 1px solid #d7efe4;
+    }
+
+    .rice-result {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rice-big {
+      font-size: 34px;
+      font-weight: 1000;
+      color: #398368;
+      letter-spacing: -0.5px;
+    }
+
+    .rice-note {
+      color: #5f554f;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    @media (min-width: 760px) {
+      .app {
+        padding: 28px 22px 52px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+
+      .wide {
+        grid-column: 1 / -1;
+      }
+
+      .member-form {
+        grid-template-columns: 1fr 1fr;
+        align-items: end;
+      }
+
+      .member-form .full {
+        grid-column: 1 / -1;
+      }
+
+      .check-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .price-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .recommendations {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
 </head>
-<body class="min-h-screen py-4 px-3 pb-24 text-gray-900">
+<body>
+  <main class="app">
+    <section class="hero">
+     <h1>搭伙份量達人 🍱</h1>
 
-    <div id="side-total-btn" class="fixed top-20 right-0 z-40">
-        <div onclick="toggleCart(true)" class="w-20 py-8 gold-gradient border-y border-l border-white/30 flex flex-col items-center gap-2 rounded-l-[2rem] shadow-2xl active:scale-90 transition-all">
-            <span class="text-white font-black text-2xl" id="cart-total">0</span>
-        </div>
-    </div>
+<p class="subtitle">
+今晚吃多少？幫你算份量、推薦套餐、加點與洗米量。
+</p>
+    </section>
 
-    <div id="cart-overlay" onclick="toggleCart(false)" class="fixed inset-0 bg-black/70 z-50 hidden"></div>
-    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-[90%] max-w-[420px] bg-white z-50 shadow-2xl flex flex-col">
-        <div class="flex justify-between items-center p-6 border-b-4 bg-gray-50">
-            <h2 class="text-3xl font-black italic">Hearth Table 明細</h2>
-            <div onclick="toggleCart(false)" class="text-4xl p-2 text-gray-300">✕</div>
-        </div>
-        <div id="cart-items-list" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
-        <div class="p-8 bg-gray-100 border-t-8 space-y-4">
-            <button onclick="clearAll()" class="w-full py-3 text-red-500 font-black text-lg bg-white border-2 border-red-100 rounded-2xl">⚠️ 全部清空</button>
-            <div class="flex justify-between items-center">
-                <span class="text-xl font-bold text-gray-500">總計</span>
-                <span class="text-4xl font-black text-[#a67c52]">NT$ <span id="drawer-total">0</span></span>
-            </div>
-            <div onclick="toggleCart(false)" class="w-full py-6 gold-gradient rounded-3xl text-center text-white font-black text-2xl shadow-lg">返回挑選</div>
-        </div>
-    </div>
-
-    <div class="max-w-xl mx-auto">
-        <div id="form-container" class="bg-white rounded-[3rem] shadow-2xl overflow-hidden">
-            <div class="gold-gradient p-10 text-white text-center">
-                <h1 class="text-5xl font-black tracking-tighter italic">搭伙晚餐</h1>
-                <p class="text-xl mt-2 font-bold tracking-widest">Hearth Table</p>
-                <p class="text-sm mt-4 text-yellow-200 font-bold tracking-widest opacity-80">✨ 嚴選初榨橄欖油．無味精．食得安心 ✨</p>
-            </div>
-
-            <div class="p-6 space-y-10">
-                <div class="space-y-4">
-                    <input type="text" id="userName" class="w-full px-6 py-5 rounded-2xl border-4 border-gray-100 text-2xl font-black bg-gray-50 outline-none focus:border-[#a67c52]" placeholder="訂購人姓名">
-                    <div class="grid grid-cols-2 gap-4">
-                        <select id="deliveryType" class="px-2 py-5 rounded-2xl border-4 border-gray-100 font-black text-xl text-center" onchange="toggleDelivery(this.value)">
-                            <option value="自取">店內自取</option>
-                            <option value="外送">外送 ($50/日；3km內)</option>
-                        </select>
-                        <select id="pickupTime" class="px-2 py-5 rounded-2xl border-4 border-gray-100 font-black text-xl text-center">
-                            <option value="17:00-18:00">17:00-18:00</option>
-                            <option value="18:00-19:00">18:00-19:00</option>
-                        </select>
-                    </div>
-                    <div id="addressBox" class="hidden">
-                        <input type="text" id="address" class="w-full px-6 py-5 rounded-2xl border-4 border-orange-100 text-xl font-bold bg-orange-50 outline-none" placeholder="完整外送地址">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div onclick="setPay('現金')" id="pay-現金" class="py-4 border-4 rounded-2xl text-center font-black text-lg clickable item-selected">現金支付</div>
-                        <div onclick="setPay('LinePay')" id="pay-LinePay" class="py-4 border-4 rounded-2xl text-center font-black text-lg clickable border-gray-100 text-gray-300">LinePay 轉帳</div>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between px-2">
-                        <span class="text-lg font-black text-gray-400">STEP 1. 選擇預訂日期</span>
-                        <button onclick="clearDay()" class="text-sm font-black text-red-500 border-2 border-red-100 px-4 py-1 rounded-full">✕ 重設今日</button>
-                    </div>
-                    <div class="flex border-[4px] rounded-[2rem] overflow-hidden bg-gray-100 border-gray-100">
-                        <div onclick="switchDay('Tue')" id="tab-Tue" class="day-tab active flex-1 py-5 text-center font-black text-3xl clickable">二</div>
-                        <div onclick="switchDay('Wed')" id="tab-Wed" class="day-tab flex-1 py-5 text-center font-black text-3xl clickable">三</div>
-                        <div onclick="switchDay('Thu')" id="tab-Thu" class="day-tab flex-1 py-5 text-center font-black text-3xl clickable">四</div>
-                        <div onclick="switchDay('Fri')" id="tab-Fri" class="day-tab flex-1 py-5 text-center font-black text-3xl clickable">五</div>
-                    </div>
-                </div>
-
-                <div id="menu-content" class="space-y-12"></div>
-
-                <div class="pt-8 space-y-6">
-                    <div onclick="goToNextDay()" id="nextDayBtn" class="w-full py-6 bg-gray-800 text-white rounded-[2rem] text-center font-black text-2xl clickable shadow-lg">下一個日期 ➜</div>
-                    <div onclick="submitOrder()" class="gold-gradient w-full py-8 rounded-[2.5rem] text-center text-white font-black text-3xl shadow-xl clickable">確認預訂，產出截圖 ➔</div>
-                </div>
-            </div>
+    <section class="grid">
+      <div class="card">
+        <div class="card-title">
+          <h2>家庭成員管理</h2>
+          <span class="badge" id="memberCount">0 位</span>
         </div>
 
-        <div id="success-container" class="hidden bg-white rounded-[3rem] shadow-2xl p-8 text-center border-[8px] border-orange-100">
-            <div class="mb-6">
-                <h2 class="text-4xl font-black text-gray-800 italic">Hearth Table</h2>
-                <p class="text-gray-400 font-bold">訂單明細確認</p>
-            </div>
-            <div id="summary-content" class="text-left text-xl font-black whitespace-pre-line leading-relaxed border-4 p-8 rounded-[2rem] bg-gray-50 mb-8 border-gray-100"></div>
-            <p class="text-red-500 font-black mb-4">📸 請截圖此畫面並回傳 Line 群組</p>
-            <div onclick="location.reload()" class="text-gray-300 underline text-lg py-4">返回修改</div>
+        <div class="member-form">
+          <div>
+            <label for="memberType">成員類型</label>
+            <select id="memberType">
+              <option value="child">兒童</option>
+              <option value="female">女性</option>
+              <option value="male">男性</option>
+              <option value="training">重訓</option>
+            </select>
+          </div>
+
+          <div class="full check-row">
+            <label class="check-card">
+              <input type="checkbox" id="bigAppetite" />
+              <span>食量大（肉類 +50g）</span>
+            </label>
+
+            <label class="check-card">
+              <input type="checkbox" id="lessVeggie" />
+              <span>不愛吃菜（蔬菜 -50g）</span>
+            </label>
+
+            <label class="check-card">
+              <input type="checkbox" id="lessRice" />
+              <span>飯量少</span>
+            </label>
+          </div>
+
+          <p class="hint full">提醒：兒童不適用「食量大」與「不愛吃菜」，選擇兒童時會自動忽略。</p>
+
+          <div class="full">
+            <button class="btn btn-primary" id="addMemberBtn">＋ 新增成員</button>
+          </div>
         </div>
-    </div>
 
-    <script>
-        const menus = {
-            Tue: { main: [{i:"A",n:"果香翅小腿",m:180,s:100},{i:"B",n:"薑煸小卷",m:250,s:150},{i:"C",n:"蔥爆豬肉片",m:180,s:100},{i:"D",n:"乾煎鱸魚",m:210,s:120},{i:"E",n:"乾煎鮭魚",m:290,s:170}], side: [{i:"F",n:"糯米椒炒豆乾",m:100,s:60},{i:"G",n:"馬鈴薯炒肉絲",m:110,s:70},{i:"H",n:"番茄炒蛋",m:100,s:60}], soup: {n:"味噌牡蠣湯", p:100} },
-            Wed: { main: [{i:"A",n:"香菇肉燥",m:180,s:100},{i:"B",n:"檸檬魚",m:230,s:130},{i:"C",n:"蔥爆牛肉",m:240,s:140},{i:"D",n:"大黃瓜透過",m:180,s:100},{i:"E",n:"乾煎鮭魚",m:290,s:170}], side: [{i:"F",n:"蔬菜烘蛋",m:120,s:60},{i:"G",n:"馬鈴薯炒肉絲",m:110,s:70},{i:"H",n:"蔥爆豆乾",m:100,s:60}], soup: {n:"海帶芽貢丸湯", p:100} },
-            Thu: { main: [{i:"A",n:"南瓜滷肉",m:220,s:130},{i:"B",n:"茄汁鯖魚",m:200,s:120},{i:"C",n:"蔥爆牛肉",m:240,s:140},{i:"D",n:"大黃瓜燴蝦仁",m:180,s:100},{i:"E",n:"乾煎鮭魚",m:290,s:170}], side: [{i:"F",n:"蟹黃豆腐煲",m:120,s:70},{i:"G",n:"蔥爆豆乾",m:100,s:60},{i:"H",n:"番茄炒蛋",m:100,s:60}], soup: {n:"香菇雞湯", p:120} },
-            Fri: { main: [{i:"A",n:"白醬嫩雞",m:200,s:120},{i:"B",n:"絲瓜鮮蚵",m:190,s:110},{i:"C",n:"蔥爆豬肉片",m:180,s:100},{i:"D",n:"紅燒鱸魚",m:210,s:120},{i:"E",n:"乾煎鮭魚",m:290,s:170}], side: [{i:"F",n:"金針菇炒豆包",m:100,s:60},{i:"G",n:"蔥爆豆乾",m:100,s:60},{i:"H",n:"番茄炒蛋",m:100,s:60}], soup: {n:"香根牛肉湯", p:120} }
-        };
+        <div class="members" id="members"></div>
+      </div>
 
-        let selections = { Tue: {}, Wed: {}, Thu: {}, Fri: {} };
-        let currentDay = 'Tue';
-        let paymentMethod = '現金';
+      <div class="card">
+        <div class="card-title">
+          <h2>需求總覽</h2>
+          <span class="badge">即時計算</span>
+        </div>
 
-        function hasAddons(day) {
-            const s = selections[day];
-            return Object.keys(s).some(k => k.includes('addon') && s[k] > 0);
+        <div class="summary">
+          <div class="metric">
+            <div class="metric-label">需要的肉類份量</div>
+            <div class="metric-value"><span id="proteinNeed">0</span>g</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">需要的蔬菜份量</div>
+            <div class="metric-value"><span id="veggieNeed">0</span>g</div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          推薦以「最接近需求、加點少、價格低」排序；多人或肉量需求高時會適度納入雙主菜餐。
+        </div>
+      </div>
+
+      <div class="card wide">
+        <div class="card-title">
+          <h2>價格設定區</h2>
+          <span class="badge">可自行修改</span>
+        </div>
+
+        <div class="price-grid">
+          <div class="price-field">
+            <label for="priceLight">輕享餐價格</label>
+            <input type="number" id="priceLight" min="0" value="300" />
+          </div>
+
+          <div class="price-field">
+            <label for="priceLightUpgrade">輕享餐升級主菜</label>
+            <input type="number" id="priceLightUpgrade" min="0" value="75" />
+          </div>
+
+          <div class="price-field">
+            <label for="priceDouble">雙主菜餐價格</label>
+            <input type="number" id="priceDouble" min="0" value="590" />
+          </div>
+
+          <div class="price-field">
+            <label for="priceLargeMain">大份主菜加點價格</label>
+            <input type="number" id="priceLargeMain" min="0" value="180" />
+          </div>
+
+          <div class="price-field">
+            <label for="priceLargeSide">大份副菜加點價格</label>
+            <input type="number" id="priceLargeSide" min="0" value="90" />
+          </div>
+
+          <div class="price-field">
+            <label for="priceSmallMain">小份主菜加點價格</label>
+            <input type="number" id="priceSmallMain" min="0" value="110" />
+          </div>
+
+          <div class="price-field">
+            <label for="priceSmallSide">小份副菜加點價格</label>
+            <input type="number" id="priceSmallSide" min="0" value="60" />
+          </div>
+        </div>
+
+        <div class="fixed-price-note">
+          時蔬基本已含在套餐內，不能額外加點；加大 +$20、雙拼 +$60。
+        </div>
+      </div>
+
+      <div class="card wide">
+        <div class="card-title">
+          <h2>推薦方案</h2>
+          <span class="badge">前 3 名</span>
+        </div>
+
+        <div class="recommendations" id="recommendations"></div>
+      </div>
+
+      <div class="card wide rice-card">
+        <div class="card-title">
+          <h2>今日煮飯量</h2>
+          <span class="badge">貼心小提醒</span>
+        </div>
+
+        <div class="rice-result" id="riceResult"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const nutritionBase = {
+      child: { label: "兒童", protein: 75, veggie: 60, emoji: "🧒" },
+      female: { label: "女性", protein: 105, veggie: 120, emoji: "👩" },
+      male: { label: "男性", protein: 135, veggie: 150, emoji: "👨" },
+      training: { label: "重訓", protein: 200, veggie: 180, emoji: "💪" }
+    };
+
+    const riceBase = {
+      child: { normal: 0.3, less: 0.3 },
+      female: { normal: 0.4, less: 0.3 },
+      male: { normal: 0.6, less: 0.5 },
+      training: { normal: 0.7, less: 0.6 }
+    };
+
+    const fixedVeggiePrices = {
+      vegBasic: 0,
+      vegLarge: 20,
+      vegDouble: 60
+    };
+
+    const members = [];
+
+    const els = {
+      memberType: document.getElementById("memberType"),
+      bigAppetite: document.getElementById("bigAppetite"),
+      lessVeggie: document.getElementById("lessVeggie"),
+      lessRice: document.getElementById("lessRice"),
+      addMemberBtn: document.getElementById("addMemberBtn"),
+      members: document.getElementById("members"),
+      memberCount: document.getElementById("memberCount"),
+      proteinNeed: document.getElementById("proteinNeed"),
+      veggieNeed: document.getElementById("veggieNeed"),
+      recommendations: document.getElementById("recommendations"),
+      riceResult: document.getElementById("riceResult"),
+      prices: {
+        light: document.getElementById("priceLight"),
+        lightUpgrade: document.getElementById("priceLightUpgrade"),
+        double: document.getElementById("priceDouble"),
+        largeMain: document.getElementById("priceLargeMain"),
+        largeSide: document.getElementById("priceLargeSide"),
+        smallMain: document.getElementById("priceSmallMain"),
+        smallSide: document.getElementById("priceSmallSide")
+      }
+    };
+
+    function numberValue(input) {
+      const value = Number(input.value);
+      return Number.isFinite(value) && value >= 0 ? value : 0;
+    }
+
+    function getPrices() {
+      return {
+        light: numberValue(els.prices.light),
+        lightUpgrade: numberValue(els.prices.lightUpgrade),
+        double: numberValue(els.prices.double),
+        largeMain: numberValue(els.prices.largeMain),
+        largeSide: numberValue(els.prices.largeSide),
+        smallMain: numberValue(els.prices.smallMain),
+        smallSide: numberValue(els.prices.smallSide),
+        vegBasic: fixedVeggiePrices.vegBasic,
+        vegLarge: fixedVeggiePrices.vegLarge,
+        vegDouble: fixedVeggiePrices.vegDouble
+      };
+    }
+
+    function formatMoney(value) {
+      return "$" + Math.round(value).toLocaleString("zh-Hant-TW") + " 起";
+    }
+
+    function addMember() {
+      const type = els.memberType.value;
+      const isChild = type === "child";
+
+      members.push({
+        id: Date.now() + Math.random(),
+        type,
+        bigAppetite: isChild ? false : els.bigAppetite.checked,
+        lessVeggie: isChild ? false : els.lessVeggie.checked,
+        lessRice: els.lessRice.checked
+      });
+
+      els.bigAppetite.checked = false;
+      els.lessVeggie.checked = false;
+      els.lessRice.checked = false;
+      render();
+    }
+
+    function removeMember(id) {
+      const index = members.findIndex(member => member.id === id);
+      if (index >= 0) {
+        members.splice(index, 1);
+        render();
+      }
+    }
+
+    function calculateNeeds() {
+      return members.reduce((total, member) => {
+        const base = nutritionBase[member.type];
+        const isChild = member.type === "child";
+
+        let protein = base.protein;
+        let veggie = base.veggie;
+
+        if (!isChild && member.bigAppetite) protein += 50;
+        if (!isChild && member.lessVeggie) veggie -= 50;
+
+        total.protein += protein;
+        total.veggie += Math.max(0, veggie);
+
+        return total;
+      }, { protein: 0, veggie: 0 });
+    }
+
+    function calculateRiceCups() {
+      return members.reduce((total, member) => {
+        const rule = riceBase[member.type];
+        total += member.lessRice ? rule.less : rule.normal;
+        return total;
+      }, 0);
+    }
+
+    function getFitLabel(proteinNeed, veggieNeed) {
+      const totalNeed = proteinNeed + veggieNeed;
+
+      if (totalNeed <= 520) return "適合：2~3人家庭";
+      if (totalNeed <= 760) return "適合：3~4人家庭";
+      return "適合：4~5人家庭";
+    }
+
+    function getReasonCandidates(plan, allPlans) {
+      const minOverScore = Math.min(...allPlans.map(item => item.overScore));
+      const minAddonCount = Math.min(...allPlans.map(item => item.totalAddonCount));
+      const minPrice = Math.min(...allPlans.map(item => item.price));
+
+      const candidates = [];
+
+      if (plan.overScore === minOverScore) {
+        candidates.push("⭐ 今天最推薦：這組份量剛剛好，吃飽又不容易剩太多");
+      }
+
+      if (plan.proteinOver >= 250 || plan.veggieOver >= 250) {
+        candidates.push("⭐ 家庭熱門：如果今天的菜剛好是家人愛的，可以多一點");
+      }
+
+      if (plan.totalAddonCount === minAddonCount && plan.totalAddonCount > 0) {
+        candidates.push("⭐ 懶人首選：加點少、點餐簡單，忙碌晚餐很適合");
+      }
+
+      if (plan.totalAddonCount >= 3) {
+        candidates.push("⭐ 菜色豐富：菜色種類豐富，大家比較有選擇");
+      }
+
+      if (plan.veggieOver >= 150 || plan.vegLargeCount > 0 || plan.vegDoubleCount > 0) {
+        candidates.push("⭐ 均衡飲食：多一點時蔬，整餐更均衡");
+      }
+
+      if (plan.mealKey === "double") {
+        candidates.push("⭐ 大家庭推薦：家裡人多，這組比較省事");
+      }
+
+      if (plan.price === minPrice) {
+        candidates.push("⭐ 精打細算：想顧預算的話，這組最划算");
+      }
+
+      if (plan.proteinOver <= 100) {
+        candidates.push("⭐ 清爽選擇：今天太熱、食慾可能不佳，這組肉量不會太負擔");
+      }
+
+      if (plan.vegSideCount > 0) {
+        candidates.push("⭐ 補充蔬菜：蔬菜不夠時補一份（蔬菜類）副菜，營養更完整");
+      }
+
+      return candidates;
+    }
+
+    function assignReasons(plans) {
+      const usedReasons = new Set();
+
+      const fallbackReasons = [
+        "⭐ 今天最推薦：這組份量剛剛好，吃飽又不容易剩太多",
+        "⭐ 家庭熱門：如果今天的菜剛好是家人愛的，可以多一點",
+        "⭐ 懶人首選：加點少、點餐簡單，忙碌晚餐很適合",
+        "⭐ 菜色豐富：菜色種類豐富，大家比較有選擇",
+        "⭐ 均衡飲食：多一點時蔬，整餐更均衡",
+        "⭐ 大家庭推薦：家裡人多，這組比較省事",
+        "⭐ 精打細算：想顧預算的話，這組最划算",
+        "⭐ 清爽選擇：今天太熱、食慾可能不佳，這組肉量不會太負擔",
+        "⭐ 補充蔬菜：蔬菜不夠時補一份（蔬菜類）副菜，營養更完整"
+      ];
+
+      plans.forEach(plan => {
+        const candidates = getReasonCandidates(plan, plans);
+        let selectedReason = candidates.find(reason => !usedReasons.has(reason));
+
+        if (!selectedReason) {
+          selectedReason = fallbackReasons.find(reason => !usedReasons.has(reason));
         }
 
-        function toggleCart(open) {
-            const drawer = document.getElementById('cart-drawer');
-            const overlay = document.getElementById('cart-overlay');
-            if(open) { updateDrawer(); overlay.classList.remove('hidden'); setTimeout(() => drawer.classList.add('open'), 10); }
-            else { drawer.classList.remove('open'); setTimeout(() => overlay.classList.add('hidden'), 300); }
+        if (!selectedReason) {
+          selectedReason = fallbackReasons[0];
         }
 
-        function toggleDelivery(val) { document.getElementById('addressBox').classList.toggle('hidden', val==='自取'); updateTotal(); }
+        plan.reason = selectedReason;
+        usedReasons.add(selectedReason);
+      });
 
-        function setPay(method) {
-            paymentMethod = method;
-            document.getElementById('pay-現金').className = `py-4 border-4 rounded-2xl text-center font-black text-lg clickable ${method==='現金'?'item-selected':'border-gray-100 text-gray-300'}`;
-            document.getElementById('pay-LinePay').className = `py-4 border-4 rounded-2xl text-center font-black text-lg clickable ${method==='LinePay'?'item-selected':'border-gray-100 text-gray-300'}`;
+      return plans;
+    }
+
+    function getDynamicProteinLimit(needs) {
+      const maxBaseProtein = 900;
+      const shortage = Math.max(0, needs.protein - maxBaseProtein);
+      const largeCount = Math.ceil(shortage / 300) + 3;
+      return Math.min(Math.max(largeCount, 4), 18);
+    }
+
+    function getDynamicVeggieLimit(needs) {
+      const shortage = Math.max(0, needs.veggie - 200);
+      const count = Math.ceil(shortage / 200) + 3;
+      return Math.min(Math.max(count, 3), 18);
+    }
+
+    function makePlanKey(plan) {
+      return [
+        plan.mealKey,
+        plan.largeAddonCount,
+        plan.smallAddonCount,
+        plan.mainAddonForVeggie,
+        plan.vegSideCount,
+        plan.vegLargeCount,
+        plan.vegDoubleCount
+      ].join("-");
+    }
+
+    function createVeggieCandidates(targetVeggie, currentVeggie, veggieLimit) {
+      const shortage = Math.max(0, targetVeggie - currentVeggie);
+      const candidates = [];
+
+      if (shortage === 0) {
+        candidates.push({
+          vegLargeCount: 0,
+          vegDoubleCount: 0,
+          vegSideCount: 0
+        });
+      }
+
+      const maxDouble = Math.min(Math.ceil(shortage / 400) + 2, veggieLimit);
+      const maxLarge = Math.min(Math.ceil(shortage / 300) + 2, veggieLimit);
+
+      for (let vegDoubleCount = 0; vegDoubleCount <= maxDouble; vegDoubleCount++) {
+        for (let vegLargeCount = 0; vegLargeCount <= maxLarge; vegLargeCount++) {
+          const beforeSide =
+            currentVeggie
+            + vegDoubleCount * 400
+            + vegLargeCount * 300;
+
+          const sideShortage = Math.max(0, targetVeggie - beforeSide);
+          const vegSideCount = sideShortage > 0 ? Math.ceil(sideShortage / 200) : 0;
+          const finalVeggie = beforeSide + vegSideCount * 200;
+
+          if (finalVeggie >= targetVeggie) {
+            candidates.push({
+              vegLargeCount,
+              vegDoubleCount,
+              vegSideCount
+            });
+          }
         }
+      }
 
-        function clearDay() { if(confirm(`重設週${{Tue:'二',Wed:'三',Thu:'四',Fri:'五'}[currentDay]}的選取內容？`)) { selections[currentDay] = {}; renderMenu(); updateTotal(); }}
-        function clearAll() { if(confirm("確定全部清空？")) { selections = { Tue: {}, Wed: {}, Thu: {}, Fri: {} }; toggleCart(false); renderMenu(); updateTotal(); }}
+      const unique = [];
+      const used = new Set();
 
-        function switchDay(day) { 
-            currentDay = day; 
-            document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${day}`).classList.add('active');
-            renderMenu(); 
+      candidates.forEach(item => {
+        const key = [
+          item.vegLargeCount,
+          item.vegDoubleCount,
+          item.vegSideCount
+        ].join("-");
+
+        if (!used.has(key)) {
+          used.add(key);
+          unique.push(item);
         }
+      });
 
-        function goToNextDay() {
-            const days = ['Tue','Wed','Thu','Fri'];
-            const idx = days.indexOf(currentDay);
-            if(idx < 3) switchDay(days[idx+1]);
-            window.scrollTo({top: 280, behavior: 'smooth'});
+      return unique.sort((a, b) => {
+        const aVeg = a.vegLargeCount * 300 + a.vegDoubleCount * 400 + a.vegSideCount * 200;
+        const bVeg = b.vegLargeCount * 300 + b.vegDoubleCount * 400 + b.vegSideCount * 200;
+
+        const aCount = a.vegLargeCount + a.vegDoubleCount + a.vegSideCount;
+        const bCount = b.vegLargeCount + b.vegDoubleCount + b.vegSideCount;
+
+        if (aVeg !== bVeg) return aVeg - bVeg;
+        if (aCount !== bCount) return aCount - bCount;
+        return a.vegSideCount - b.vegSideCount;
+      }).slice(0, 6);
+    }
+
+    function shouldIncludeDoublePlan(needs, sortedPlans) {
+      const bestLightPlan = sortedPlans.find(plan => plan.mealKey !== "double");
+      const bestDoublePlan = sortedPlans.find(plan => plan.mealKey === "double");
+
+      if (!bestDoublePlan) return false;
+
+      const familySizeHigh = members.length >= 4;
+      const proteinNeedHigh = needs.protein >= 700;
+      const lightNeedsManyAddons = bestLightPlan ? bestLightPlan.totalAddonCount >= 2 : false;
+      const lightPriceCloseToDouble = bestLightPlan ? bestLightPlan.price >= bestDoublePlan.price * 0.85 : false;
+      const lightOrderTooComplex = bestLightPlan ? bestLightPlan.orderOptions.length >= 4 : false;
+
+      return familySizeHigh || proteinNeedHigh || lightNeedsManyAddons || lightPriceCloseToDouble || lightOrderTooComplex;
+    }
+
+    function enumerateRecommendations(needs) {
+      const prices = getPrices();
+      const proteinLimit = getDynamicProteinLimit(needs);
+      const veggieLimit = getDynamicVeggieLimit(needs);
+
+      const meals = [
+        {
+          key: "light-basic",
+          name: "輕享餐",
+          baseProtein: 300,
+          baseVeggie: 200,
+          basePrice: prices.light,
+          upgradeLabel: ""
+        },
+        {
+          key: "light-upgrade",
+          name: "輕享餐",
+          baseProtein: 450,
+          baseVeggie: 200,
+          basePrice: prices.light + prices.lightUpgrade,
+          upgradeLabel: "主菜升級"
+        },
+        {
+          key: "double",
+          name: "雙主菜餐",
+          baseProtein: 900,
+          baseVeggie: 200,
+          basePrice: prices.double,
+          upgradeLabel: ""
         }
+      ];
 
-        function updateSel(k, v) { selections[currentDay][k] = v; renderMenu(); updateTotal(); }
-        function changeQty(id, amt) { selections[currentDay][id] = Math.max(0, (selections[currentDay][id] || 0) + amt); renderMenu(); updateTotal(); }
+      const plans = [];
 
-        function renderMenu() {
-            const sel = selections[currentDay];
-            const data = menus[currentDay];
-            let html = `
-            <div class="space-y-4">
-                <div class="bg-orange-50 border-l-4 border-[#a67c52] p-4 rounded-r-xl space-y-2">
-                    <div class="text-[#a67c52] font-black text-lg">🍱 套餐內容：一主菜 + 一時蔬 + 青花菜 + 一副菜</div>
-                    <div class="flex gap-4 text-sm font-bold text-gray-500">
-                        <span class="bg-white px-2 py-1 rounded border border-orange-200 shadow-sm text-orange-600">M：主副菜各300g+時蔬青花菜共400g</span>
-                        <span class="bg-white px-2 py-1 rounded border border-orange-200 shadow-sm">S：M份量的一半</span>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div onclick="updateSel('type','M')" class="p-6 border-4 rounded-[2.5rem] font-black text-center clickable ${sel.type==='M'?'item-selected':'border-gray-100 text-gray-300'}">
-                        <div class="text-2xl">M 套餐</div>
-                        <div class="text-lg opacity-80">$500</div>
-                    </div>
-                    <div onclick="updateSel('type','S')" class="p-6 border-4 rounded-[2.5rem] font-black text-center clickable ${sel.type==='S'?'item-selected':'border-gray-100 text-gray-300'}">
-                        <div class="text-2xl">S 套餐</div>
-                        <div class="text-lg opacity-80">$300</div>
-                    </div>
-                </div>
-                <div onclick="updateSel('type','NONE')" class="py-2 text-center font-black text-lg ${sel.type==='NONE'?'text-[#a67c52]':'text-gray-300'} underline clickable">➔ 自由單點模式</div>
-            </div>`;
+      meals.forEach(meal => {
+        for (let largeAddonCount = 0; largeAddonCount <= proteinLimit; largeAddonCount++) {
+          for (let smallAddonCount = 0; smallAddonCount <= 1; smallAddonCount++) {
+            const proteinAddon = largeAddonCount * 300 + smallAddonCount * 150;
+            const protein = meal.baseProtein + proteinAddon;
 
-            if (sel.type === 'M' || sel.type === 'S') {
-                const limit = (sel.type === 'M') ? 180 : 100;
-                html += `<div class="space-y-4 pt-6 border-t-4 border-gray-50"><h3 class="text-xl font-black text-[#a67c52]">STEP 2. 選擇套餐主菜</h3>`;
-                data.main.forEach((m, i) => {
-                    const extra = Math.max(0, (sel.type==='M'?m.m:m.s) - limit);
-                    html += `<div onclick="updateSel('mainIdx',${i})" class="p-6 border-4 rounded-2xl font-black text-2xl flex justify-between items-center clickable ${sel.mainIdx===i?'item-selected':'border-gray-50 bg-gray-50/50'}"><span>${m.i}. ${m.n}</span> ${extra>0?`<span class="text-red-500 text-lg">+$${extra}</span>`:''}</div>`;
-                });
-                html += `</div><div class="space-y-4 pt-6"><h3 class="text-xl font-black text-[#a67c52]">STEP 3. 選擇套餐副菜</h3>`;
-                data.side.forEach((s, i) => {
-                    html += `<div onclick="updateSel('sideIdx',${i})" class="p-6 border-4 rounded-2xl font-black text-2xl clickable ${sel.sideIdx===i?'item-selected':'border-gray-50 bg-gray-50/50'}">${s.i}. ${s.n}</div>`;
-                });
-                html += `<div onclick="updateSel('sideIdx','v')" class="p-6 border-4 rounded-2xl font-black text-2xl text-green-600 clickable ${sel.sideIdx==='v'?'item-selected border-green-500':'border-green-50 bg-green-50/50'}">✨ 時蔬量加大 (不選副菜)</div></div>`;
+            if (protein < needs.protein) continue;
+
+            const possibleMainVeggie = largeAddonCount * 60 + smallAddonCount * 30;
+            const mainVeggieOptions = [0];
+
+            if (possibleMainVeggie > 0 && meal.baseVeggie < needs.veggie) {
+              mainVeggieOptions.push(possibleMainVeggie);
             }
 
-            if(sel.type) {
-                html += `<div class="pt-10 border-t-4 border-gray-100 space-y-8"><h3 class="text-2xl font-black text-[#a67c52] italic uppercase">加購/單購品項</h3>`;
-                data.main.forEach((m, i) => html += renderAddon(`addonM-${i}`, m.i, m.n, m.m, m.s));
-                data.side.forEach((s, i) => html += renderAddon(`addonS-${i}`, s.i, s.n, s.m, s.s));
-                const sQty = sel['addonSoup'] || 0;
-                html += `<div class="p-6 bg-white rounded-[2.5rem] flex justify-between items-center border-4 border-gray-100 shadow-md">
-                    <div class="font-black text-2xl text-gray-800">🍲 ${data.soup.n}<br><span class="text-[#a67c52] mt-2 block">$${data.soup.p}</span></div>
-                    <div class="v-qty-container">
-                        <div onclick="changeQty('addonSoup',1)" class="v-qty-btn btn-plus">＋</div>
-                        <div class="text-3xl font-black py-2">${sQty}</div>
-                        <div onclick="changeQty('addonSoup',-1)" class="v-qty-btn btn-minus">－</div>
-                    </div>
-                </div></div>`;
-            }
-            document.getElementById('menu-content').innerHTML = html;
-        }
+            mainVeggieOptions.forEach(mainAddonForVeggie => {
+              const veggieCandidates = createVeggieCandidates(
+                needs.veggie,
+                meal.baseVeggie + mainAddonForVeggie,
+                veggieLimit
+              );
 
-        function renderAddon(id, letter, name, pM, pS) {
-            const sel = selections[currentDay];
-            return `<div class="p-6 bg-white rounded-[2.5rem] space-y-6 border-4 border-gray-100 shadow-lg">
-                <div class="font-black text-2xl text-gray-800">${letter}. ${name}</div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 p-4 rounded-2xl flex justify-between items-center">
-                        <div class="font-black text-lg text-gray-400">大 $${pM}</div>
-                        <div class="v-qty-container" style="width:75px">
-                            <div onclick="changeQty('${id}-M',1)" class="v-qty-btn btn-plus" style="height:45px">＋</div>
-                            <div class="text-2xl font-black">${sel[id+'-M']||0}</div>
-                            <div onclick="changeQty('${id}-M',-1)" class="v-qty-btn btn-minus" style="height:45px">－</div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded-2xl flex justify-between items-center">
-                        <div class="font-black text-lg text-gray-400">小 $${pS}</div>
-                        <div class="v-qty-container" style="width:75px">
-                            <div onclick="changeQty('${id}-S',1)" class="v-qty-btn btn-plus" style="height:45px">＋</div>
-                            <div class="text-2xl font-black">${sel[id+'-S']||0}</div>
-                            <div onclick="changeQty('${id}-S',-1)" class="v-qty-btn btn-minus" style="height:45px">－</div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        }
+              veggieCandidates.forEach(veg => {
+                const veggie =
+                  meal.baseVeggie
+                  + mainAddonForVeggie
+                  + veg.vegLargeCount * 300
+                  + veg.vegDoubleCount * 400
+                  + veg.vegSideCount * 200;
 
-        function updateTotal() {
-            let total = 0; let activeDays = 0;
-            const delivery = document.getElementById('deliveryType').value;
-            for (let day in selections) {
-                const s = selections[day]; if (!s.type) continue;
-                if (s.type === 'NONE' && !hasAddons(day)) continue; 
+                if (veggie < needs.veggie) return;
 
-                activeDays++;
-                let dayTotal = 0;
-                if (s.type === 'M') dayTotal += 500 + Math.max(0, (menus[day].main[s.mainIdx||0]?.m || 0) - 180);
-                else if (s.type === 'S') dayTotal += 300 + Math.max(0, (menus[day].main[s.mainIdx||0]?.s || 0) - 100);
-                else if (s.type === 'NONE') dayTotal += 50; 
-                
-                Object.keys(s).forEach(k => { if (s[k]>0 && k.includes('addon')) {
-                    const p = k.split('-');
-                    if (k.startsWith('addonM-')) dayTotal += s[k] * (p[2]==='M' ? menus[day].main[p[1]].m : menus[day].main[p[1]].s);
-                    if (k.startsWith('addonS-')) dayTotal += s[k] * (p[2]==='M' ? menus[day].side[p[1]].m : menus[day].side[p[1]].s);
-                    if (k === 'addonSoup') dayTotal += s[k] * menus[day].soup.p;
-                }});
-                total += dayTotal;
-            }
-            if (delivery !== '自取') total += activeDays * 50;
-            document.getElementById('cart-total').innerText = total.toLocaleString();
-            document.getElementById('drawer-total').innerText = total.toLocaleString();
-        }
+                const proteinAddonCount = largeAddonCount + smallAddonCount;
+                const veggieAddonCount = veg.vegLargeCount + veg.vegDoubleCount + veg.vegSideCount;
+                const totalAddonCount = proteinAddonCount + veggieAddonCount;
 
-        function updateDrawer() {
-            let list = [];
-            for (let day in selections) {
-                const s = selections[day]; if (!s.type) continue;
-                if (s.type === 'NONE' && !hasAddons(day)) continue;
+                const price =
+                  meal.basePrice
+                  + largeAddonCount * prices.largeSide
+                  + smallAddonCount * prices.smallSide
+                  + veg.vegLargeCount * prices.vegLarge
+                  + veg.vegDoubleCount * prices.vegDouble
+                  + veg.vegSideCount * prices.largeSide;
 
-                const dName = {Tue:'週二',Wed:'週三',Thu:'週四',Fri:'週五'}[day];
-                let items = [];
-                if(s.type === 'NONE') items.push(`<li class="text-red-500 italic">⚠️ 自由單點</li>`);
-                else {
-                    items.push(`<li>🍱 ${s.type}套餐：${menus[day].main[s.mainIdx||0].n}</li>`);
-                    items.push(`<li>🥗 副菜：${s.sideIdx==='v'?'時蔬量加大':menus[day].side[s.sideIdx||0].n}</li>`);
+                const proteinOver = protein - needs.protein;
+                const veggieOver = veggie - needs.veggie;
+                const overScore = proteinOver + veggieOver;
+
+                const orderOptions = [];
+
+                if (meal.upgradeLabel) orderOptions.push(meal.upgradeLabel);
+
+                if (veg.vegLargeCount > 0) {
+                  orderOptions.push(veg.vegLargeCount === 1 ? "時蔬加大" : `時蔬加大 × ${veg.vegLargeCount}`);
                 }
-                Object.keys(s).forEach(k => { if (s[k]>0 && k.includes('addon')) {
-                    const p = k.split('-');
-                    if (k.startsWith('addonM-')) items.push(`<li>➕ ${menus[day].main[p[1]].n}(${p[2]}) x${s[k]}</li>`);
-                    if (k.startsWith('addonS-')) items.push(`<li>➕ ${menus[day].side[p[1]].n}(${p[2]}) x${s[k]}</li>`);
-                    if (k === 'addonSoup') items.push(`<li>➕ ${menus[day].soup.n} x${s[k]}</li>`);
-                }});
-                list.push(`<div class="p-6 bg-orange-50 rounded-[1.5rem] border-l-8 border-[#a67c52]">
-                    <div class="text-[#a67c52] font-black text-xl mb-2">${dName}</div>
-                    <ul class="text-xl font-bold text-gray-700 space-y-2">${items.join('')}</ul>
-                </div>`);
-            }
-            document.getElementById('cart-items-list').innerHTML = list.join('') || '<div class="text-center py-20 text-gray-300 font-black">尚未選購</div>';
+
+                if (veg.vegDoubleCount > 0) {
+                  orderOptions.push(veg.vegDoubleCount === 1 ? "時蔬雙拼" : `時蔬雙拼 × ${veg.vegDoubleCount}`);
+                }
+
+                if (largeAddonCount > 0) {
+                  orderOptions.push(`主菜／副菜大份 × ${largeAddonCount}`);
+                }
+
+                if (smallAddonCount > 0) {
+                  orderOptions.push(`主菜／副菜小份 × ${smallAddonCount}`);
+                }
+
+                if (veg.vegSideCount > 0) {
+                  orderOptions.push(`（蔬菜類）副菜大份 × ${veg.vegSideCount}`);
+                }
+
+                if (orderOptions.length === 0) {
+                  orderOptions.push("基本套餐");
+                }
+
+                const detailItems = [
+                  `提供肉類 ${protein}g`,
+                  `提供蔬菜 ${veggie}g`
+                ];
+
+                if (mainAddonForVeggie > 0) {
+                  detailItems.push(`其中主菜配料約增加蔬菜 ${mainAddonForVeggie}g`);
+                }
+
+                if (veg.vegSideCount > 0) {
+                  detailItems.push(`（蔬菜類）副菜補充蔬菜 ${veg.vegSideCount * 200}g`);
+                }
+
+                if (meal.upgradeLabel) detailItems.push("含主菜升級");
+                if (largeAddonCount > 0) detailItems.push(`大份肉類加點 ${largeAddonCount} 份`);
+                if (smallAddonCount > 0) detailItems.push(`小份肉類加點 ${smallAddonCount} 份`);
+                if (veg.vegLargeCount > 0) detailItems.push(`時蔬加大 ${veg.vegLargeCount} 份`);
+                if (veg.vegDoubleCount > 0) detailItems.push(`時蔬雙拼 ${veg.vegDoubleCount} 份`);
+
+                const plan = {
+                  key: "",
+                  mealKey: meal.key,
+                  name: meal.name,
+                  orderOptions,
+                  detailItems,
+                  protein,
+                  veggie,
+                  price,
+                  proteinOver,
+                  veggieOver,
+                  overScore,
+                  totalAddonCount,
+                  proteinAddonCount,
+                  veggieAddonCount,
+                  largeAddonCount,
+                  smallAddonCount,
+                  mainAddonForVeggie,
+                  vegSideCount: veg.vegSideCount,
+                  vegLargeCount: veg.vegLargeCount,
+                  vegDoubleCount: veg.vegDoubleCount,
+                  proteinRate: needs.protein === 0 ? 0 : Math.round((protein / needs.protein) * 100),
+                  veggieRate: needs.veggie === 0 ? 0 : Math.round((veggie / needs.veggie) * 100),
+                  fit: getFitLabel(needs.protein, needs.veggie)
+                };
+
+                plan.key = makePlanKey(plan);
+                plans.push(plan);
+              });
+            });
+          }
         }
+      });
 
-        function submitOrder() {
-            const name = document.getElementById('userName').value;
-            const delType = document.getElementById('deliveryType').value;
-            const address = document.getElementById('address').value;
-            if(!name) { alert("請填寫姓名"); return; }
-            if(delType === '外送' && !address) { alert("請填寫地址"); return; }
+      const uniquePlans = [];
+      const usedKeys = new Set();
 
-            let d = [`【Hearth Table 預訂清單】`,`訂購人：${name}`,`方式：${delType}`,`時間：${document.getElementById('pickupTime').value}`];
-            if(delType === '外送') d.push(`地址：${address}`);
-            d.push(`付款：${paymentMethod}`,`---------------------------`);
-            
-            let hasValidData = false;
-            for (let day in selections) {
-                const s = selections[day]; if (!s.type) continue;
-                if (s.type === 'NONE' && !hasAddons(day)) continue;
-
-                hasValidData = true;
-                d.push(`● ${{Tue:'週二',Wed:'週三',Thu:'週四',Fri:'週五'}[day]}：`);
-                if(s.type === 'NONE') d.push(`  ▫️ 模式：自由單點`);
-                else d.push(`  ▫️ 套餐：${s.type}套餐 (${menus[day].main[s.mainIdx||0].n})`);
-                Object.keys(s).forEach(k => { if (s[k]>0 && k.includes('addon')) {
-                    const p = k.split('-');
-                    if (k.startsWith('addonM-')) d.push(`  ➕ [單點] ${menus[day].main[p[1]].n}(${p[2]}) x${s[k]}`);
-                    if (k.startsWith('addonS-')) d.push(`  ➕ [單點] ${menus[day].side[p[1]].n}(${p[2]}) x${s[k]}`);
-                    if (k === 'addonSoup') d.push(`  ➕ [加購] ${menus[day].soup.n} x${s[k]}`);
-                }});
-            }
-
-            if(!hasValidData) { alert("請選餐！"); return; }
-
-            d.push(`---------------------------`,`應付總計：NT$ ${document.getElementById('cart-total').innerText}`);
-            
-            document.getElementById('side-total-btn').style.display = 'none';
-            document.getElementById('form-container').classList.add('hidden');
-            document.getElementById('success-container').classList.remove('hidden');
-            document.getElementById('summary-content').innerText = d.join('\n');
-            window.scrollTo(0, 0);
+      plans.forEach(plan => {
+        if (!usedKeys.has(plan.key)) {
+          usedKeys.add(plan.key);
+          uniquePlans.push(plan);
         }
-        switchDay('Tue');
-    </script>
+      });
+
+      const sortedPlans = uniquePlans.sort((a, b) => {
+        if (a.overScore !== b.overScore) return a.overScore - b.overScore;
+        if (a.totalAddonCount !== b.totalAddonCount) return a.totalAddonCount - b.totalAddonCount;
+        if (a.price !== b.price) return a.price - b.price;
+        if (a.proteinAddonCount !== b.proteinAddonCount) return a.proteinAddonCount - b.proteinAddonCount;
+        return a.protein - b.protein;
+      });
+
+      let selected = sortedPlans.slice(0, 3);
+
+      if (shouldIncludeDoublePlan(needs, sortedPlans)) {
+        const bestDoublePlan = sortedPlans.find(plan => plan.mealKey === "double");
+        const hasDoublePlan = selected.some(plan => plan.mealKey === "double");
+
+        if (bestDoublePlan && !hasDoublePlan) {
+          selected = selected.slice(0, 2);
+          selected.push(bestDoublePlan);
+          selected.sort((a, b) => {
+            if (a.overScore !== b.overScore) return a.overScore - b.overScore;
+            if (a.totalAddonCount !== b.totalAddonCount) return a.totalAddonCount - b.totalAddonCount;
+            if (a.price !== b.price) return a.price - b.price;
+            if (a.proteinAddonCount !== b.proteinAddonCount) return a.proteinAddonCount - b.proteinAddonCount;
+            return a.protein - b.protein;
+          });
+        }
+      }
+
+      assignReasons(selected);
+
+      return selected;
+    }
+
+    function renderMembers() {
+      els.memberCount.textContent = `${members.length} 位`;
+
+      if (members.length === 0) {
+        els.members.innerHTML = `<div class="empty">尚未新增成員<br>請先加入家庭成員開始推薦</div>`;
+        return;
+      }
+
+      els.members.innerHTML = members.map(member => {
+        const base = nutritionBase[member.type];
+        const isChild = member.type === "child";
+        const protein = base.protein + (!isChild && member.bigAppetite ? 50 : 0);
+        const veggie = Math.max(0, base.veggie - (!isChild && member.lessVeggie ? 50 : 0));
+        const rice = riceBase[member.type][member.lessRice ? "less" : "normal"];
+
+        const tags = [];
+
+        if (!isChild && member.bigAppetite) tags.push("食量大");
+        if (!isChild && member.lessVeggie) tags.push("不愛吃菜");
+        if (member.lessRice) tags.push("飯量少");
+        if (tags.length === 0) tags.push("標準食量");
+
+        return `
+          <div class="member-item">
+            <div class="member-main">
+              <div class="member-name">${base.emoji} ${base.label}</div>
+              <div class="member-meta">
+                肉類份量 ${protein}g・蔬菜份量 ${veggie}g・米 ${rice} 杯<br>
+                ${tags.join("・")}
+              </div>
+            </div>
+            <button class="btn btn-danger" onclick="removeMember(${member.id})">刪除</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function splitPlanOptions(plan) {
+      const mainKeywords = ["基本套餐", "主菜升級", "時蔬加大", "時蔬雙拼"];
+
+      const mainOptions = plan.orderOptions.filter(option =>
+        mainKeywords.some(keyword => option.includes(keyword))
+      );
+
+      const addonOptions = plan.orderOptions.filter(option =>
+        !mainKeywords.some(keyword => option.includes(keyword))
+      );
+
+      return {
+        main: mainOptions.length > 0 ? mainOptions.join("、") : "基本套餐",
+        addons: addonOptions.length > 0 ? addonOptions.join("、") : "無需額外加點"
+      };
+    }
+
+    function renderRecommendations(needs) {
+      if (members.length === 0) {
+        els.recommendations.innerHTML = `<div class="empty">新增成員後，這裡會自動出現推薦方案。</div>`;
+        return;
+      }
+
+      const plans = enumerateRecommendations(needs);
+
+      if (plans.length === 0) {
+        els.recommendations.innerHTML = `<div class="empty">目前找不到符合需求的組合，請調整餐點資料或價格設定。</div>`;
+        return;
+      }
+
+      els.recommendations.innerHTML = plans.map((plan, index) => {
+        const options = splitPlanOptions(plan);
+
+        return `
+          <article class="plan">
+            <div class="plan-header">
+              <h3 class="plan-title">No.${index + 1} ${plan.name}</h3>
+              <div class="plan-price">${formatMoney(plan.price)}</div>
+            </div>
+
+            <p class="plan-main-line">- ${options.main}</p>
+            <p class="plan-addon-line">加點：${options.addons}</p>
+
+            <div class="reason-box">
+              <div class="reason-title">推薦理由：</div>
+              <div class="reason-text">${plan.reason}</div>
+            </div>
+
+            <div class="simple-stats">
+              <div class="simple-stat-line">
+                肉／蛋豆含 ${plan.protein} 公克；蔬菜含 ${plan.veggie} 公克
+              </div>
+              <div class="simple-stat-line over">
+                肉量超過 ${plan.proteinOver} 公克；蔬菜超過 ${plan.veggieOver} 公克
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderRice() {
+      if (members.length === 0) {
+        els.riceResult.innerHTML = `<div class="empty">新增成員後，這裡會幫你算今天要洗幾杯米。</div>`;
+        return;
+      }
+
+      const riceCups = calculateRiceCups();
+      const rounded = Math.round(riceCups * 10) / 10;
+      const more = Math.round((riceCups + 0.2) * 10) / 10;
+
+      els.riceResult.innerHTML = `
+        <div class="rice-big">今天建議洗米：約 ${rounded.toFixed(1)} 杯</div>
+        <div class="rice-note">
+          如果今天菜色很下飯、家人比較餓，可以抓到約 ${more.toFixed(1)} 杯。<br>
+          天氣熱或食慾比較差，就照建議量煮，較不容易剩飯。
+        </div>
+      `;
+    }
+
+    function render() {
+      const needs = calculateNeeds();
+
+      els.proteinNeed.textContent = needs.protein;
+      els.veggieNeed.textContent = needs.veggie;
+
+      renderMembers();
+      renderRecommendations(needs);
+      renderRice();
+    }
+
+    els.addMemberBtn.addEventListener("click", addMember);
+
+    els.memberType.addEventListener("change", () => {
+      if (els.memberType.value === "child") {
+        els.bigAppetite.checked = false;
+        els.lessVeggie.checked = false;
+      }
+    });
+
+    Object.values(els.prices).forEach(input => {
+      input.addEventListener("input", render);
+    });
+
+    render();
+  </script>
 </body>
 </html>
