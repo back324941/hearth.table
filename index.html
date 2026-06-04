@@ -497,11 +497,10 @@
 <body>
   <main class="app">
     <section class="hero">
-     <h1>搭伙份量計算器 🍱</h1>
-
-<p class="subtitle">
-今晚吃多少？幫你算份量、推薦套餐、加點與洗米量。
-</p>
+      <h1>搭伙份量計算器 🍱</h1>
+      <p class="subtitle">
+        今晚吃多少？幫你算份量、推薦套餐、加點與洗米量。
+      </p>
     </section>
 
     <section class="grid">
@@ -783,6 +782,15 @@
       if (plan.proteinOver >= 250 || plan.veggieOver >= 250) {
         candidates.push("⭐ 家庭熱門：如果今天的菜剛好是家人愛的，可以多一點");
       }
+if (
+  members.length <= 2 &&
+  plan.proteinOver >= 130 &&
+  plan.veggieOver >= 120
+) {
+  candidates.push(
+    "⭐ 份量偏多：這組對今天人數來說比較充足，或許可以順便留一份便當"
+  );
+}
 
       if (plan.totalAddonCount === minAddonCount && plan.totalAddonCount > 0) {
         candidates.push("⭐ 懶人首選：加點少、點餐簡單，忙碌晚餐很適合");
@@ -792,7 +800,7 @@
         candidates.push("⭐ 菜色豐富：菜色種類豐富，大家比較有選擇");
       }
 
-      if (plan.veggieOver >= 150 || plan.vegLargeCount > 0 || plan.vegDoubleCount > 0) {
+      if (plan.veggieOver >= 150 || plan.vegMode === "large" || plan.vegMode === "double") {
         candidates.push("⭐ 均衡飲食：多一點時蔬，整餐更均衡");
       }
 
@@ -856,87 +864,24 @@
       return Math.min(Math.max(largeCount, 4), 18);
     }
 
-    function getDynamicVeggieLimit(needs) {
-      const shortage = Math.max(0, needs.veggie - 200);
-      const count = Math.ceil(shortage / 200) + 3;
-      return Math.min(Math.max(count, 3), 18);
-    }
-
     function makePlanKey(plan) {
       return [
         plan.mealKey,
         plan.largeAddonCount,
         plan.smallAddonCount,
         plan.mainAddonForVeggie,
-        plan.vegSideCount,
-        plan.vegLargeCount,
-        plan.vegDoubleCount
+        plan.vegMode,
+        plan.vegSideCount
       ].join("-");
     }
 
-    function createVeggieCandidates(targetVeggie, currentVeggie, veggieLimit) {
+    function createVeggieCandidates(targetVeggie, currentVeggie) {
       const shortage = Math.max(0, targetVeggie - currentVeggie);
-      const candidates = [];
+      const vegSideCount = shortage > 0 ? Math.ceil(shortage / 200) : 0;
 
-      if (shortage === 0) {
-        candidates.push({
-          vegLargeCount: 0,
-          vegDoubleCount: 0,
-          vegSideCount: 0
-        });
-      }
-
-      const maxDouble = Math.min(Math.ceil(shortage / 400) + 2, veggieLimit);
-      const maxLarge = Math.min(Math.ceil(shortage / 300) + 2, veggieLimit);
-
-      for (let vegDoubleCount = 0; vegDoubleCount <= maxDouble; vegDoubleCount++) {
-        for (let vegLargeCount = 0; vegLargeCount <= maxLarge; vegLargeCount++) {
-          const beforeSide =
-            currentVeggie
-            + vegDoubleCount * 400
-            + vegLargeCount * 300;
-
-          const sideShortage = Math.max(0, targetVeggie - beforeSide);
-          const vegSideCount = sideShortage > 0 ? Math.ceil(sideShortage / 200) : 0;
-          const finalVeggie = beforeSide + vegSideCount * 200;
-
-          if (finalVeggie >= targetVeggie) {
-            candidates.push({
-              vegLargeCount,
-              vegDoubleCount,
-              vegSideCount
-            });
-          }
-        }
-      }
-
-      const unique = [];
-      const used = new Set();
-
-      candidates.forEach(item => {
-        const key = [
-          item.vegLargeCount,
-          item.vegDoubleCount,
-          item.vegSideCount
-        ].join("-");
-
-        if (!used.has(key)) {
-          used.add(key);
-          unique.push(item);
-        }
-      });
-
-      return unique.sort((a, b) => {
-        const aVeg = a.vegLargeCount * 300 + a.vegDoubleCount * 400 + a.vegSideCount * 200;
-        const bVeg = b.vegLargeCount * 300 + b.vegDoubleCount * 400 + b.vegSideCount * 200;
-
-        const aCount = a.vegLargeCount + a.vegDoubleCount + a.vegSideCount;
-        const bCount = b.vegLargeCount + b.vegDoubleCount + b.vegSideCount;
-
-        if (aVeg !== bVeg) return aVeg - bVeg;
-        if (aCount !== bCount) return aCount - bCount;
-        return a.vegSideCount - b.vegSideCount;
-      }).slice(0, 6);
+      return [{
+        vegSideCount
+      }];
     }
 
     function shouldIncludeDoublePlan(needs, sortedPlans) {
@@ -957,14 +902,12 @@
     function enumerateRecommendations(needs) {
       const prices = getPrices();
       const proteinLimit = getDynamicProteinLimit(needs);
-      const veggieLimit = getDynamicVeggieLimit(needs);
 
       const meals = [
         {
           key: "light-basic",
           name: "輕享餐",
           baseProtein: 300,
-          baseVeggie: 200,
           basePrice: prices.light,
           upgradeLabel: ""
         },
@@ -972,7 +915,6 @@
           key: "light-upgrade",
           name: "輕享餐",
           baseProtein: 450,
-          baseVeggie: 200,
           basePrice: prices.light + prices.lightUpgrade,
           upgradeLabel: "主菜升級"
         },
@@ -980,9 +922,29 @@
           key: "double",
           name: "雙主菜餐",
           baseProtein: 900,
-          baseVeggie: 200,
           basePrice: prices.double,
           upgradeLabel: ""
+        }
+      ];
+
+      const veggieModes = [
+        {
+          key: "basic",
+          label: "",
+          grams: 200,
+          price: prices.vegBasic
+        },
+        {
+          key: "large",
+          label: "時蔬加大",
+          grams: 300,
+          price: prices.vegLarge
+        },
+        {
+          key: "double",
+          label: "時蔬雙拼",
+          grams: 400,
+          price: prices.vegDouble
         }
       ];
 
@@ -999,118 +961,110 @@
             const possibleMainVeggie = largeAddonCount * 60 + smallAddonCount * 30;
             const mainVeggieOptions = [0];
 
-            if (possibleMainVeggie > 0 && meal.baseVeggie < needs.veggie) {
+            if (possibleMainVeggie > 0 && 200 < needs.veggie) {
               mainVeggieOptions.push(possibleMainVeggie);
             }
 
             mainVeggieOptions.forEach(mainAddonForVeggie => {
-              const veggieCandidates = createVeggieCandidates(
-                needs.veggie,
-                meal.baseVeggie + mainAddonForVeggie,
-                veggieLimit
-              );
+              veggieModes.forEach(vegMode => {
+                const veggieBeforeSide = vegMode.grams + mainAddonForVeggie;
+                const veggieCandidates = createVeggieCandidates(needs.veggie, veggieBeforeSide);
 
-              veggieCandidates.forEach(veg => {
-                const veggie =
-                  meal.baseVeggie
-                  + mainAddonForVeggie
-                  + veg.vegLargeCount * 300
-                  + veg.vegDoubleCount * 400
-                  + veg.vegSideCount * 200;
+                veggieCandidates.forEach(veg => {
+                  const veggie =
+                    vegMode.grams
+                    + mainAddonForVeggie
+                    + veg.vegSideCount * 200;
 
-                if (veggie < needs.veggie) return;
+                  if (veggie < needs.veggie) return;
 
-                const proteinAddonCount = largeAddonCount + smallAddonCount;
-                const veggieAddonCount = veg.vegLargeCount + veg.vegDoubleCount + veg.vegSideCount;
-                const totalAddonCount = proteinAddonCount + veggieAddonCount;
+                  const proteinAddonCount = largeAddonCount + smallAddonCount;
+                  const veggieAddonCount = (vegMode.key === "basic" ? 0 : 1) + veg.vegSideCount;
+                  const totalAddonCount = proteinAddonCount + veggieAddonCount;
 
-                const price =
-                  meal.basePrice
-                  + largeAddonCount * prices.largeSide
-                  + smallAddonCount * prices.smallSide
-                  + veg.vegLargeCount * prices.vegLarge
-                  + veg.vegDoubleCount * prices.vegDouble
-                  + veg.vegSideCount * prices.largeSide;
+                  const price =
+                    meal.basePrice
+                    + largeAddonCount * prices.largeSide
+                    + smallAddonCount * prices.smallSide
+                    + vegMode.price
+                    + veg.vegSideCount * prices.largeSide;
 
-                const proteinOver = protein - needs.protein;
-                const veggieOver = veggie - needs.veggie;
-                const overScore = proteinOver + veggieOver;
+                  const proteinOver = protein - needs.protein;
+                  const veggieOver = veggie - needs.veggie;
+                  const overScore = proteinOver + veggieOver;
 
-                const orderOptions = [];
+                  const orderOptions = [];
 
-                if (meal.upgradeLabel) orderOptions.push(meal.upgradeLabel);
+                  if (meal.upgradeLabel) orderOptions.push(meal.upgradeLabel);
+                  if (vegMode.label) orderOptions.push(vegMode.label);
 
-                if (veg.vegLargeCount > 0) {
-                  orderOptions.push(veg.vegLargeCount === 1 ? "時蔬加大" : `時蔬加大 × ${veg.vegLargeCount}`);
-                }
+                  if (largeAddonCount > 0) {
+                    orderOptions.push(`主菜／副菜大份 × ${largeAddonCount}`);
+                  }
 
-                if (veg.vegDoubleCount > 0) {
-                  orderOptions.push(veg.vegDoubleCount === 1 ? "時蔬雙拼" : `時蔬雙拼 × ${veg.vegDoubleCount}`);
-                }
+                  if (smallAddonCount > 0) {
+                    orderOptions.push(`主菜／副菜小份 × ${smallAddonCount}`);
+                  }
 
-                if (largeAddonCount > 0) {
-                  orderOptions.push(`主菜／副菜大份 × ${largeAddonCount}`);
-                }
+                  if (veg.vegSideCount > 0) {
+                    orderOptions.push(`（蔬菜類）副菜大份 × ${veg.vegSideCount}`);
+                    orderOptions.push("也可自行預備蔬菜，豐富蔬菜種類");
+                  }
 
-                if (smallAddonCount > 0) {
-                  orderOptions.push(`主菜／副菜小份 × ${smallAddonCount}`);
-                }
+                  if (orderOptions.length === 0) {
+                    orderOptions.push("基本套餐");
+                  }
 
-                if (veg.vegSideCount > 0) {
-                  orderOptions.push(`（蔬菜類）副菜大份 × ${veg.vegSideCount}`);
-                }
+                  const detailItems = [
+                    `提供肉類 ${protein}g`,
+                    `提供蔬菜 ${veggie}g`
+                  ];
 
-                if (orderOptions.length === 0) {
-                  orderOptions.push("基本套餐");
-                }
+                  if (mainAddonForVeggie > 0) {
+                    detailItems.push(`其中主菜配料約增加蔬菜 ${mainAddonForVeggie}g`);
+                  }
 
-                const detailItems = [
-                  `提供肉類 ${protein}g`,
-                  `提供蔬菜 ${veggie}g`
-                ];
+                  if (veg.vegSideCount > 0) {
+                    detailItems.push(`（蔬菜類）副菜補充蔬菜 ${veg.vegSideCount * 200}g`);
+                    detailItems.push("也可以自行預備蔬菜，讓蔬菜種類更豐富");
+                  }
 
-                if (mainAddonForVeggie > 0) {
-                  detailItems.push(`其中主菜配料約增加蔬菜 ${mainAddonForVeggie}g`);
-                }
+                  if (meal.upgradeLabel) detailItems.push("含主菜升級");
+                  if (vegMode.key === "large") detailItems.push("時蔬加大 1 次");
+                  if (vegMode.key === "double") detailItems.push("時蔬雙拼 1 次");
+                  if (largeAddonCount > 0) detailItems.push(`大份肉類加點 ${largeAddonCount} 份`);
+                  if (smallAddonCount > 0) detailItems.push(`小份肉類加點 ${smallAddonCount} 份`);
 
-                if (veg.vegSideCount > 0) {
-                  detailItems.push(`（蔬菜類）副菜補充蔬菜 ${veg.vegSideCount * 200}g`);
-                }
+                  const plan = {
+                    key: "",
+                    mealKey: meal.key,
+                    name: meal.name,
+                    orderOptions,
+                    detailItems,
+                    protein,
+                    veggie,
+                    price,
+                    proteinOver,
+                    veggieOver,
+                    overScore,
+                    totalAddonCount,
+                    proteinAddonCount,
+                    veggieAddonCount,
+                    largeAddonCount,
+                    smallAddonCount,
+                    mainAddonForVeggie,
+                    vegSideCount: veg.vegSideCount,
+                    vegMode: vegMode.key,
+                    vegLargeCount: vegMode.key === "large" ? 1 : 0,
+                    vegDoubleCount: vegMode.key === "double" ? 1 : 0,
+                    proteinRate: needs.protein === 0 ? 0 : Math.round((protein / needs.protein) * 100),
+                    veggieRate: needs.veggie === 0 ? 0 : Math.round((veggie / needs.veggie) * 100),
+                    fit: getFitLabel(needs.protein, needs.veggie)
+                  };
 
-                if (meal.upgradeLabel) detailItems.push("含主菜升級");
-                if (largeAddonCount > 0) detailItems.push(`大份肉類加點 ${largeAddonCount} 份`);
-                if (smallAddonCount > 0) detailItems.push(`小份肉類加點 ${smallAddonCount} 份`);
-                if (veg.vegLargeCount > 0) detailItems.push(`時蔬加大 ${veg.vegLargeCount} 份`);
-                if (veg.vegDoubleCount > 0) detailItems.push(`時蔬雙拼 ${veg.vegDoubleCount} 份`);
-
-                const plan = {
-                  key: "",
-                  mealKey: meal.key,
-                  name: meal.name,
-                  orderOptions,
-                  detailItems,
-                  protein,
-                  veggie,
-                  price,
-                  proteinOver,
-                  veggieOver,
-                  overScore,
-                  totalAddonCount,
-                  proteinAddonCount,
-                  veggieAddonCount,
-                  largeAddonCount,
-                  smallAddonCount,
-                  mainAddonForVeggie,
-                  vegSideCount: veg.vegSideCount,
-                  vegLargeCount: veg.vegLargeCount,
-                  vegDoubleCount: veg.vegDoubleCount,
-                  proteinRate: needs.protein === 0 ? 0 : Math.round((protein / needs.protein) * 100),
-                  veggieRate: needs.veggie === 0 ? 0 : Math.round((veggie / needs.veggie) * 100),
-                  fit: getFitLabel(needs.protein, needs.veggie)
-                };
-
-                plan.key = makePlanKey(plan);
-                plans.push(plan);
+                  plan.key = makePlanKey(plan);
+                  plans.push(plan);
+                });
               });
             });
           }
@@ -1248,10 +1202,29 @@
               <div class="simple-stat-line">
                 肉／蛋豆含 ${plan.protein} 公克；蔬菜含 ${plan.veggie} 公克
               </div>
-              <div class="simple-stat-line over">
-                肉量超過 ${plan.proteinOver} 公克；蔬菜超過 ${plan.veggieOver} 公克
-              </div>
-            </div>
+              <div class="coverage-box">
+
+  <div class="coverage-item protein">
+    <div class="coverage-label">
+      🥩 肉／蛋豆
+    </div>
+
+    <div class="coverage-value">
+      +${plan.proteinOver}g
+    </div>
+  </div>
+
+  <div class="coverage-item veggie">
+    <div class="coverage-label">
+      🥦 蔬菜
+    </div>
+
+    <div class="coverage-value">
+      +${plan.veggieOver}g
+    </div>
+  </div>
+
+</div>
           </article>
         `;
       }).join("");
